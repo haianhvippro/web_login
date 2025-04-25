@@ -1,0 +1,178 @@
+/* Cấu hình chung cho body */
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background: #f2f2f2;
+}
+
+/* Container chứa các form */
+.container {
+    max-width: 800px; /* Giảm kích thước container để vừa với màn hình */
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+/* Định dạng cho input và button */
+input, button {
+    width: 100%; /* Đảm bảo các input và button đều có chiều rộng đầy đủ */
+    padding: 10px;
+    margin: 10px 0; /* Khoảng cách đều giữa các phần tử */
+    border-radius: 10px; /* Bo góc cho các phần tử */
+    border: 1px solid #ccc; /* Thêm đường viền cho các phần tử */
+    box-sizing: border-box; /* Đảm bảo padding không làm thay đổi chiều rộng */
+}
+
+/* Đổi màu cho button khi hover */
+button:hover {
+    background-color: #45a049;
+}
+
+/* Nút gạt chuyển đổi giữa Login và Register */
+.switch-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.switch {
+    position: relative;
+    width: 240px;
+    height: 40px;
+    background: #ccc;
+    border-radius: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3px;
+    font-weight: bold;
+    color: #333;
+}
+
+.switch::before {
+    content: '';
+    position: absolute;
+    height: 34px;
+    width: 34px;
+    left: 3px;
+    top: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.5s;
+    z-index: 2;
+}
+
+.switch.active::before {
+    transform: translateX(205px); /* Dịch chuyển vòng tròn để đổi trạng thái */
+}
+
+.switch span {
+    z-index: 2;
+    width: 100%;
+    text-align: center;
+}
+
+/* Ẩn hoặc hiển thị các form */
+.form-section {
+    display: none;
+}
+
+.form-section.active {
+    display: block;
+}
+
+/* Cấu hình bảng tài khoản */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    display: none;
+    margin-top: 20px;
+    overflow-x: auto; /* Cho phép cuộn ngang */
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+#accountTable {
+    display: none;
+    margin-top: 40px;
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-x: auto; /* Thêm cuộn ngang */
+}
+
+#accountTable th, #accountTable td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+#accountTable thead {
+    background-color: #f0f0f0;
+}
+
+/* Định dạng cho email và ngày sinh trong form đăng ký */
+input[type="email"], input[type="date"] {
+    width: 100%; /* Đảm bảo các input cho email và ngày sinh đều có chiều rộng đầy đủ */
+    padding: 10px;
+    margin: 10px 0; /* Khoảng cách đều giữa các phần tử */
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Nút dấu chấm than admin */
+.admin-toggle {
+    position: fixed;
+    bottom: 20px; /* Cách đáy 20px */
+    left: 20px; /* Cách bên trái 20px */
+    width: 24px;
+    height: 24px;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    text-align: center;
+    line-height: 24px;
+    cursor: pointer;
+    z-index: 10; /* Đảm bảo nó luôn ở trên các phần tử khác */
+}
+
+/* Định dạng khi bảng tài khoản được hiển thị */
+#accountTable {
+    display: none;
+    margin-top: 20px;
+}
+
+#accountTable.show {
+    display: table;
+}
+
+/* Các hiệu ứng hover cho bảng */
+#accountTable tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Đảm bảo bảng cuộn ngang trên màn hình nhỏ */
+@media screen and (max-width: 768px) {
+    #accountTable {
+        width: 100%;
+        overflow-x: auto;
+        display: block;
+        margin-top: 20px;
+    }
+
+    table, th, td {
+        width: auto;
+    }
+}
