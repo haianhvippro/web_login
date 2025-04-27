@@ -3,19 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Đăng ký & Đăng nhập</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"> <!-- Link đến file CSS -->
 </head>
 <body>
 
   <div class="container">
     <h2 id="formTitle">Đăng nhập</h2>
 
-    <!-- Nút gạt Login/Register -->
+    <!-- Nút gạt chuyển đổi giữa Đăng nhập và Đăng ký -->
     <div class="switch-wrapper">
-      <div class="switch" id="toggleSwitch" onclick="toggleForm()">
-        <span>Login</span>
-        <span>Register</span>
-      </div>
+      <button onclick="toggleForm()">Chuyển đổi Đăng nhập/Đăng ký</button>
     </div>
 
     <!-- Form ĐĂNG NHẬP -->
@@ -27,110 +24,81 @@
 
     <!-- Form ĐĂNG KÝ -->
     <div id="signupForm" class="form-section">
-      <input type="text" id="username" placeholder="Tên đăng nhập mới" required />
-      <input type="password" id="password" placeholder="Mật khẩu" required />
-      <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu" required />
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="date" id="dob" placeholder="Ngày sinh" required />
+      <input type="text" id="signupUsername" placeholder="Tên đăng nhập" required />
+      <input type="password" id="signupPassword" placeholder="Mật khẩu" required />
+      <input type="password" id="signupConfirmPassword" placeholder="Nhập lại mật khẩu" required />
+      <input type="email" id="signupEmail" placeholder="Email" required />
+      <input type="date" id="signupDob" placeholder="Ngày sinh" required />
       <button onclick="signup()">Đăng ký</button>
     </div>
-
-    <!-- Vùng nhập mật khẩu admin -->
-    <div id="adminLogin" class="form-section">
-      <input type="password" id="adminPassword" placeholder="Mật khẩu quản lý" />
-      <button onclick="checkAdmin()">Xác nhận</button>
-    </div>
-
-    <!-- Nút dấu chấm than -->
-    <div class="admin-toggle" onclick="toggleAdmin()">!</div>
   </div>
 
-  <script>
-    // Lấy dữ liệu tài khoản từ localStorage
-    function getUsersFromLocalStorage() {
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      return users;
-    }
+  <!-- Nút Admin -->
+  <div class="admin-toggle" onclick="goToAdmin()">!</div>
 
-    function saveUsersToLocalStorage(users) {
-      localStorage.setItem('users', JSON.stringify(users));
-    }
+  <script>
+    const sheetAPI = 'https://script.google.com/macros/s/AKfycbwOLUdtOHS8VZ-liNOVcq7Ihp7U9jRFOOrsPJpUfdPPQnjl3cJVNYzpbrYSekzLBPA/exec'; // Thay thế với link API của bạn
 
     function toggleForm() {
       const loginForm = document.getElementById('loginForm');
       const signupForm = document.getElementById('signupForm');
       const formTitle = document.getElementById('formTitle');
-      const switchBtn = document.getElementById('toggleSwitch');
 
       loginForm.classList.toggle('active');
       signupForm.classList.toggle('active');
-      switchBtn.classList.toggle('active');
-
       formTitle.textContent = signupForm.classList.contains('active') ? "Đăng ký" : "Đăng nhập";
     }
 
-    function signup() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-      const email = document.getElementById('email').value;
-      const dob = document.getElementById('dob').value;
-      const users = getUsersFromLocalStorage();
+    async function signup() {
+      const username = document.getElementById('signupUsername').value;
+      const password = document.getElementById('signupPassword').value;
+      const confirmPassword = document.getElementById('signupConfirmPassword').value;
+      const email = document.getElementById('signupEmail').value;
+      const dob = document.getElementById('signupDob').value;
 
-      // Kiểm tra nếu tài khoản đã tồn tại
-      if (users.some(user => user.username === username)) {
-        alert("❌ Tên đăng nhập đã tồn tại!");
-        return;
-      }
-
-      // Kiểm tra mật khẩu và mật khẩu xác nhận có giống nhau không
       if (password !== confirmPassword) {
-        alert("❌ Mật khẩu và nhập lại mật khẩu không khớp. Vui lòng thử lại.");
+        alert('❌ Mật khẩu nhập lại không khớp.');
         return;
       }
 
-      // Thêm tài khoản mới
-      users.push({ username, password, email, dob });
-      saveUsersToLocalStorage(users);
-      alert("✅ Đăng ký thành công!");
-      document.getElementById('username').value = '';
-      document.getElementById('password').value = '';
-      document.getElementById('confirmPassword').value = '';
-      document.getElementById('email').value = '';
-      document.getElementById('dob').value = '';
+      const response = await fetch(sheetAPI, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'register',
+          username,
+          password,
+          email,
+          dob
+        }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const result = await response.text();
+      alert(result);
     }
 
-    function login() {
+    async function login() {
       const username = document.getElementById('loginUsername').value;
       const password = document.getElementById('loginPassword').value;
-      const users = getUsersFromLocalStorage();
-      const found = users.find(u => u.username === username && u.password === password);
 
-      if (found) {
-        alert("✅ Đăng nhập thành công!");
-        if (username === "admin" && password === "admin123") {
-          window.location.href = 'admin.html'; // Chuyển hướng tới trang quản lý tài khoản admin
-        } else {
-          alert("❌ Bạn không phải admin.");
+      const response = await fetch(sheetAPI);
+      const data = await response.json();
+
+      const users = data.users;
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (user) {
+        alert('✅ Đăng nhập thành công!');
+        if (username === 'admin') {
+          goToAdmin();
         }
       } else {
-        alert("❌ Sai tài khoản hoặc mật khẩu.");
+        alert('❌ Sai tài khoản hoặc mật khẩu.');
       }
     }
 
-    function toggleAdmin() {
-      const adminLogin = document.getElementById('adminLogin');
-      adminLogin.style.display = adminLogin.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function checkAdmin() {
-      const enteredPassword = document.getElementById('adminPassword').value;
-      const adminPassword = "admin123"; // Mật khẩu quản lý cố định
-      if (enteredPassword === adminPassword) {
-        window.location.href = 'admin.html'; // Chuyển hướng tới trang quản lý tài khoản admin
-      } else {
-        alert("❌ Sai mật khẩu quản lý!");
-      }
+    function goToAdmin() {
+      window.location.href = 'admin.html'; // Chuyển hướng đến trang quản lý
     }
   </script>
 
