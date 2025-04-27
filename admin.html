@@ -7,146 +7,151 @@
 </head>
 <body>
 
-  <div class="container">
-    <h2>Quản lý tài khoản</h2>
+<div class="container">
+  <h2>Quản lý tài khoản</h2>
 
-    <!-- Bảng danh sách tài khoản -->
-    <table id="accountTable" class="form-section">
-      <thead>
-        <tr>
-          <th>Tên đăng nhập</th>
-          <th>Mật khẩu</th>
-          <th>Email</th>
-          <th>Ngày sinh</th>
-          <th>Thao tác</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <!-- Bảng danh sách tài khoản -->
+  <table id="accountTable" class="form-section">
+    <thead>
+      <tr>
+        <th>Tên đăng nhập</th>
+        <th>Mật khẩu</th>
+        <th>Email</th>
+        <th>Ngày sinh</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-    <!-- Modal để yêu cầu nhập mật khẩu xác nhận xóa -->
-    <div id="confirmationModal" class="modal">
-      <div class="modal-content">
-        <h3>Nhập mật khẩu quản trị để xác nhận xóa tài khoản</h3>
-        <input type="password" id="adminPasswordInput" placeholder="Mật khẩu quản trị" />
-        <button onclick="confirmDelete()">Xác nhận</button>
-        <button onclick="closeModal()">Hủy</button>
-      </div>
+  <!-- Modal xác nhận xóa -->
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      <h3>Nhập mật khẩu quản trị để xác nhận xóa tài khoản</h3>
+      <input type="password" id="adminPasswordInput" placeholder="Mật khẩu quản trị" />
+      <button onclick="confirmDelete()">Xác nhận</button>
+      <button onclick="closeModal()">Hủy</button>
     </div>
   </div>
+</div>
 
-  <script>
-    const adminPassword = "admin123"; // Mật khẩu quản trị cố định
+<script>
+  const adminPassword = "admin123"; // Mật khẩu quản trị
+  const sheetAPI = 'https://script.google.com/macros/s/AKfycbwOLUdtOHS8VZ-liNOVcq7Ihp7U9jRFOOrsPJpUfdPPQnjl3cJVNYzpbrYSekzLBPA/exec'; // Thay bằng link API của bạn
 
-    // Lấy dữ liệu tài khoản từ localStorage
-    function getUsersFromLocalStorage() {
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      return users;
+  let users = []; // Mảng lưu danh sách tài khoản
+  let usernameToDelete = null;
+
+  // Tải dữ liệu từ Google Sheets
+  async function fetchUsers() {
+    try {
+      const response = await fetch(sheetAPI);
+      const data = await response.json();
+      users = data.users || []; // Giả sử dữ liệu trả về có dạng { users: [...] }
+      displayUsers();
+    } catch (error) {
+      console.error('Không thể tải dữ liệu:', error);
     }
+  }
 
-    // Lưu dữ liệu tài khoản vào localStorage
-    function saveUsersToLocalStorage(users) {
-      localStorage.setItem('users', JSON.stringify(users));
+  // Hiển thị dữ liệu ra bảng
+  function displayUsers() {
+    const table = document.getElementById('accountTable');
+    const tbody = table.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    users.forEach(user => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${user.username}</td>
+        <td>${user.password}</td>
+        <td>${user.email}</td>
+        <td>${user.dob}</td>
+        <td><button onclick="showConfirmationModal('${user.username}')">Xóa</button></td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    table.style.display = 'table';
+  }
+
+  // Hiện modal xác nhận xóa
+  function showConfirmationModal(username) {
+    document.getElementById('confirmationModal').style.display = 'flex';
+    usernameToDelete = username;
+  }
+
+  function closeModal() {
+    document.getElementById('confirmationModal').style.display = 'none';
+  }
+
+  // Xác nhận và xóa tài khoản
+  async function confirmDelete() {
+    const enteredPassword = document.getElementById('adminPasswordInput').value;
+    if (enteredPassword === adminPassword) {
+      await deleteAccount(usernameToDelete);
+      closeModal();
+      alert('✅ Tài khoản đã được xóa!');
+    } else {
+      alert('❌ Mật khẩu quản trị không đúng!');
     }
+  }
 
-    // Hiển thị danh sách tài khoản
-    function displayUsers() {
-      const users = getUsersFromLocalStorage();
-      const table = document.getElementById('accountTable');
-      const tbody = table.querySelector('tbody');
-      tbody.innerHTML = ''; // Xóa nội dung cũ
-
-      users.forEach(user => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${user.username}</td>
-          <td>${user.password}</td>
-          <td>${user.email}</td>
-          <td>${user.dob}</td>
-          <td><button onclick="showConfirmationModal('${user.username}')">Xóa</button></td>
-        `;
-        tbody.appendChild(row);
+  // Gửi yêu cầu xóa tài khoản lên Google Sheets
+  async function deleteAccount(username) {
+    try {
+      await fetch(sheetAPI, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'delete', username: username }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-      table.style.display = 'table'; // Hiển thị bảng
+      fetchUsers(); // Reload lại danh sách sau khi xóa
+    } catch (error) {
+      console.error('Không thể xóa tài khoản:', error);
     }
+  }
 
-    // Hiển thị modal yêu cầu nhập mật khẩu để xác nhận xóa
-    function showConfirmationModal(username) {
-      document.getElementById('confirmationModal').style.display = 'block';
-      window.usernameToDelete = username; // Lưu tên đăng nhập tài khoản cần xóa
-    }
+  // Khi trang web load
+  window.onload = fetchUsers;
+</script>
 
-    // Đóng modal
-    function closeModal() {
-      document.getElementById('confirmationModal').style.display = 'none';
-    }
-
-    // Xác nhận xóa tài khoản
-    function confirmDelete() {
-      const enteredPassword = document.getElementById('adminPasswordInput').value;
-      if (enteredPassword === adminPassword) {
-        deleteAccount(usernameToDelete); // Gọi hàm xóa tài khoản
-        closeModal(); // Đóng modal
-        alert('Tài khoản đã được xóa!');
-      } else {
-        alert('Mật khẩu quản trị không đúng!');
-      }
-    }
-
-    // Xóa tài khoản
-    function deleteAccount(username) {
-      const users = getUsersFromLocalStorage();
-      const updatedUsers = users.filter(user => user.username !== username); // Lọc tài khoản cần xóa
-      saveUsersToLocalStorage(updatedUsers); // Lưu lại danh sách mới
-      displayUsers(); // Cập nhật lại bảng danh sách tài khoản
-    }
-
-    // Gọi hàm để hiển thị danh sách tài khoản khi trang load
-    window.onload = displayUsers;
-  </script>
-
-  <style>
-    /* Style cho modal xác nhận xóa */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      background-color: white;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-      text-align: center;
-    }
-
-    .modal input {
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    .modal button {
-      padding: 10px 20px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .modal button:hover {
-      background-color: #218838;
-    }
-  </style>
+<style>
+  /* Modal style */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .modal input {
+    margin: 10px 0;
+    padding: 8px;
+    width: 80%;
+  }
+  .modal button {
+    margin: 5px;
+    padding: 8px 16px;
+    border: none;
+    background-color: #28a745;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .modal button:hover {
+    background-color: #218838;
+  }
+</style>
 
 </body>
 </html>
